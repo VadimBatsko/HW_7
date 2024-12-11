@@ -27,10 +27,10 @@ class Phone(Field):
         
 class Birthday(Field):
     def __init__(self, value):
-        try: 
-            self.data = datetime.strptime(value, "%d.%m.%Y").date()
+        if datetime.strptime(value, "%d.%m.%Y").date():
+            self.data = value
             super().__init__(value)
-        except ValueError:
+        else:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
         
 
@@ -92,15 +92,18 @@ class AddressBook(UserDict):
         now = datetime.today().date()
 
         for user in self.data.values():
-            this_year = user.birthday.data.replace(year=now.year)
-            if this_year < now:
-                this_year = this_year.replace(year=now.year + 1)
-    
-            if 0 <= (this_year - now).days <= days:
-                if this_year.weekday() >= 5:
-                    this_year = self.find_next_weekday(this_year,0)
-                birth_date = this_year.strftime("%Y.%m.%d")
-                upcoming_birthdays.append(f'{user.name.value.title()} birthday is coming up soon - {birth_date}')
+            
+            if user.birthday:
+                datetime_birthday = datetime.strptime(user.birthday.value, "%d.%m.%Y").date()
+                this_year = datetime_birthday.replace(year=now.year)
+                if this_year < now:
+                    this_year = this_year.replace(year=now.year + 1)
+        
+                if 0 <= (this_year - now).days <= days:
+                    if this_year.weekday() >= 5:
+                        this_year = self.find_next_weekday(this_year,0)
+                    birth_date = this_year.strftime("%Y.%m.%d")
+                    upcoming_birthdays.append(f'{user.name.value.title()} birthday is coming up soon - {birth_date}')
         return upcoming_birthdays
 
     def __str__(self):
@@ -189,7 +192,7 @@ def main():
         user_input = input("Enter a command: ").strip().lower()
         command, *args = parse_input(user_input)
 
-        if command in ["close", "exit"]:
+        if command in ["close", "exit","0"]:
             print("Good buy!")
             break
         elif command == "hello":
